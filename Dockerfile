@@ -5,8 +5,10 @@ FROM node:22-alpine AS assets
 
 WORKDIR /app
 
-COPY package.json package-lock.json ./
-RUN npm ci
+COPY package.json package-lock.json* ./
+# npm ci si le verrou est versionné, npm install sinon : le premier build d'un
+# clone frais ne doit pas échouer pour un fichier absent.
+RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
 
 COPY vite.config.js ./
 COPY resources ./resources
@@ -45,7 +47,13 @@ COPY --from=assets /app/public/build ./public/build
 
 # --no-scripts : le manifeste des paquets est reconstruit au premier boot,
 # sans dépendre d'un .env au moment du build.
+#
+# Reverb et le SDK IA sont résolus ici plutôt que figés dans composer.lock :
+# le verrou du dépôt a été produit avant leur ajout, et c'est la connexion du
+# serveur de build qui télécharge, pas celle du poste de développement.
 RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts \
+    && composer require laravel/reverb laravel/ai \
+        --no-interaction --no-scripts --update-no-dev --optimize-autoloader \
     && mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache \
     && chmod -R 777 storage bootstrap/cache
 
