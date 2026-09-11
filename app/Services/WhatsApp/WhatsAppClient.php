@@ -89,6 +89,30 @@ class WhatsAppClient
         return ['ok' => true, 'data' => $response->json() ?? []];
     }
 
+    /**
+     * Écriture simple sur la Graph API, même contrat que get() : les échecs
+     * sont des valeurs de retour, pas des exceptions.
+     *
+     * @param  array<string, mixed>  $payload
+     * @return array{ok: bool, data?: array<string, mixed>, error?: string}
+     */
+    public function post(string $path, array $payload = []): array
+    {
+        try {
+            $response = Http::withToken(config('whatsapp.token'))
+                ->timeout(15)
+                ->post($this->url($path), $payload);
+        } catch (ConnectionException $exception) {
+            return ['ok' => false, 'error' => 'Graph API injoignable : '.$exception->getMessage()];
+        }
+
+        if ($response->failed()) {
+            return ['ok' => false, 'error' => $this->errorMessage($response->json(), $response->status())];
+        }
+
+        return ['ok' => true, 'data' => $response->json() ?? []];
+    }
+
     private function url(string $path): string
     {
         return sprintf(

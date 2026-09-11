@@ -64,6 +64,24 @@ class ConversationController extends Controller
     }
 
     /**
+     * Répare depuis la console les deux pannes qui se corrigent par un appel
+     * à Meta : numéro non enregistré, application non abonnée.
+     */
+    public function repair(Request $request, ConnectionChecker $checker): JsonResponse
+    {
+        $validated = $request->validate([
+            'action' => ['required', 'in:register,subscribe'],
+            'pin' => ['nullable', 'required_if:action,register', 'digits:6'],
+        ]);
+
+        $result = $validated['action'] === 'register'
+            ? $checker->registerPhoneNumber((string) $validated['pin'])
+            : $checker->subscribeApp();
+
+        return response()->json($result + ['state' => $checker->check(true)]);
+    }
+
+    /**
      * Liste de gauche : la conversation la plus récente en tête.
      *
      * @return Collection<int, Conversation>

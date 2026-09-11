@@ -6,15 +6,21 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 
 /**
- * État de la liaison avec Meta. Chaque vérification en échec porte la
- * correction à appliquer : une configuration cassée doit se voir avant le
- * premier message, pas au moment où il n'arrive pas.
+ * État de la liaison avec Meta, et réparation des deux pannes qui se corrigent
+ * depuis la console : un numéro non enregistré, une application non abonnée.
+ *
+ * Chaque vérification en échec porte la correction à appliquer. Une liaison
+ * cassée doit se voir avant le premier message, pas au moment où il manque.
  */
 class ConnectionChecker
 {
     private const CACHE_KEY = 'whatsapp.connection-status';
 
     private const TTL = 60;
+
+    private const DOC_REGISTRATION = 'https://developers.facebook.com/docs/whatsapp/cloud-api/reference/registration';
+
+    private const DOC_WEBHOOKS = 'https://developers.facebook.com/docs/whatsapp/cloud-api/guides/set-up-webhooks';
 
     public function __construct(private WhatsAppClient $client) {}
 
@@ -28,6 +34,42 @@ class ConnectionChecker
         }
 
         return Cache::remember(self::CACHE_KEY, self::TTL, fn () => $this->run());
+    }
+
+    /**
+     * Enregistre le numéro auprès de la Cloud API. Le PIN devient celui de la
+     * vérification en deux étapes du numéro : il doit être conservé.
+     *
+     * @return array{ok: bool, message: string}
+     */
+    public function registerPhoneNumber(string $pin): array
+    {
+        $response = $this->client->post(config('whatsapp.phone_id').'/register', [
+            'messaging_product' => 'whatsapp',
+            'pin' => $pin,
+        ]);
+
+        Cache::forget(self::CACHE_KEY);
+
+        return $response['ok']
+            ? ['ok' => true, 'message' => 'Numéro enregistré auprès de la Cloud API. Conservez ce PIN.']
+            : ['ok' => false, 'message' => $response['error']];
+    }
+
+    /**
+     * Abonne l'application aux webhooks du compte WhatsApp Business.
+     *
+     * @return array{ok: bool, message: string}
+     */
+    public function subscribeApp(): array
+    {
+        $response = $this->client->post(config('whatsapp.waba_id').'/subscribed_apps');
+
+        Cache::forget(self::CACHE_KEY);
+
+        return $response['ok']
+            ? ['ok' => true, 'message' => 'Application abonnée aux webhooks du compte.']
+            : ['ok' => false, 'message' => $response['error']];
     }
 
     /**
@@ -66,54 +108,65 @@ class ConnectionChecker
         ])->filter(fn ($value) => blank($value))->keys();
 
         if ($missing->isNotEmpty()) {
-            return [
-                'label' => 'Configuration',
-                'status' => 'error',
-                'detail' => 'Variables absentes : '.$missing->implode(', ').'.',
-                'advice' => 'Renseignez ces clés dans .env, puis relancez la pile avec « docker compose up -d ».',
-            ];
+            return $this->check_(
+                'Configuration',
+                'error',
+                'Variables absentes : '.$missing->implode(', ').'.',
+                'Renseignez ces clés dans .env, puis relancez la pile avec « docker compose up -d ».',
+            );
         }
 
-        return [
-            'label' => 'Configuration',
-            'status' => 'ok',
-            'detail' => 'Les cinq identifiants Meta sont renseignés.',
-            'advice' => null,
-        ];
+        return $this->check_('Configuration', 'ok', 'Les cinq identifiants Meta sont renseignés.');
     }
 
     /**
-     * Valide d'un même coup le jeton et l'identifiant du numéro : un jeton
-     * expiré se manifeste ici, avant qu'un envoi n'échoue.
+     * Valide d'un même coup le jeton, l'identifiant du numéro et son
+     * enregistrement : un jeton expiré ou un numéro non enregistré se
+     * manifestent ici, avant qu'un envoi n'échoue.
      *
      * @return array<string, mixed>
      */
     private function phoneNumber(): array
     {
         $response = $this->client->get((string) config('whatsapp.phone_id'), [
-            'fields' => 'display_phone_number,verified_name,quality_rating',
+            'fields' => 'display_phone_number,verified_name,quality_rating,platform_type,status',
         ]);
 
         if (! $response['ok']) {
-            return [
-                'label' => 'Numéro et jeton',
-                'status' => 'error',
-                'detail' => $response['error'],
-                'advice' => 'Vérifiez WHATSAPP_TOKEN et WHATSAPP_PHONE_ID. Un jeton temporaire expire au bout de 24 h : générez un jeton de System User pour une installation durable.',
-            ];
+            return $this->check_(
+                'Numéro et jeton',
+                'error',
+                $response['error'],
+                'Vérifiez WHATSAPP_TOKEN et WHATSAPP_PHONE_ID. Un jeton temporaire expire au bout de 24 h : générez un jeton de System User pour une installation durable.',
+            );
         }
 
-        return [
-            'label' => 'Numéro et jeton',
-            'status' => 'ok',
-            'detail' => sprintf(
-                '%s — +%s, qualité %s.',
+        // Un numéro peut exister dans le WABA sans être enregistré auprès de la
+        // Cloud API : la lecture réussit, mais tout envoi échoue en 133010.
+        $platform = data_get($response['data'], 'platform_type');
+
+        if ($platform !== null && $platform !== 'CLOUD_API') {
+            return $this->check_(
+                'Numéro et jeton',
+                'error',
+                "Le numéro n'est pas enregistré auprès de la Cloud API (platform_type : {$platform}).",
+                'Aucun envoi ne passera tant que ce numéro n\'est pas enregistré. Choisissez un PIN à six chiffres : il deviendra celui de la vérification en deux étapes du numéro.',
+                action: 'register',
+                doc: self::DOC_REGISTRATION,
+            );
+        }
+
+        return $this->check_(
+            'Numéro et jeton',
+            'ok',
+            sprintf(
+                '%s — +%s, état %s, qualité %s.',
                 data_get($response['data'], 'verified_name', 'Numéro connecté'),
                 ltrim((string) data_get($response['data'], 'display_phone_number', '—'), '+'),
+                strtolower((string) data_get($response['data'], 'status', 'inconnu')),
                 strtolower((string) data_get($response['data'], 'quality_rating', 'inconnue')),
             ),
-            'advice' => null,
-        ];
+        );
     }
 
     /**
@@ -127,23 +180,26 @@ class ConnectionChecker
         $response = $this->client->get(config('whatsapp.waba_id').'/subscribed_apps');
 
         if (! $response['ok']) {
-            return [
-                'label' => 'Abonnement aux webhooks',
-                'status' => 'error',
-                'detail' => $response['error'],
-                'advice' => 'Vérifiez WHATSAPP_WABA_ID, et que le jeton porte bien la permission whatsapp_business_management.',
-            ];
+            return $this->check_(
+                'Abonnement aux webhooks',
+                'error',
+                $response['error'],
+                'Vérifiez WHATSAPP_WABA_ID, et que le jeton porte la permission whatsapp_business_management.',
+                doc: self::DOC_WEBHOOKS,
+            );
         }
 
         $apps = data_get($response['data'], 'data', []);
 
         if (empty($apps)) {
-            return [
-                'label' => 'Abonnement aux webhooks',
-                'status' => 'error',
-                'detail' => "Aucune application n'est abonnée à ce compte WhatsApp Business.",
-                'advice' => 'Aucun message entrant ne peut arriver. Abonnez l\'application (POST sur /{WABA_ID}/subscribed_apps), puis cochez le champ « messages » dans la configuration du webhook.',
-            ];
+            return $this->check_(
+                'Abonnement aux webhooks',
+                'error',
+                "Aucune application n'est abonnée à ce compte WhatsApp Business.",
+                'Aucun message entrant ne peut arriver. Abonnez l\'application, puis cochez le champ « messages » dans la configuration du webhook côté Meta.',
+                action: 'subscribe',
+                doc: self::DOC_WEBHOOKS,
+            );
         }
 
         $names = collect($apps)
@@ -151,11 +207,34 @@ class ConnectionChecker
             ->filter()
             ->implode(', ');
 
+        return $this->check_(
+            'Abonnement aux webhooks',
+            'ok',
+            $names !== '' ? 'Application abonnée : '.$names.'.' : 'Une application est abonnée.',
+        );
+    }
+
+    /**
+     * Forme unique d'une vérification, pour que le front n'ait qu'une
+     * structure à connaître.
+     *
+     * @return array<string, mixed>
+     */
+    private function check_(
+        string $label,
+        string $status,
+        string $detail,
+        ?string $advice = null,
+        ?string $action = null,
+        ?string $doc = null,
+    ): array {
         return [
-            'label' => 'Abonnement aux webhooks',
-            'status' => 'ok',
-            'detail' => $names !== '' ? 'Application abonnée : '.$names.'.' : 'Une application est abonnée.',
-            'advice' => null,
+            'label' => $label,
+            'status' => $status,
+            'detail' => $detail,
+            'advice' => $advice,
+            'action' => $action,
+            'doc' => $doc,
         ];
     }
 }

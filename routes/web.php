@@ -13,6 +13,7 @@ Route::middleware('admin')->group(function () {
     Route::redirect('/', '/conversations');
 
     Route::get('/connection-status', [ConversationController::class, 'status'])->name('connection.status');
+    Route::post('/connection-status/repair', [ConversationController::class, 'repair'])->name('connection.repair');
 
     Route::get('/conversations', [ConversationController::class, 'index'])->name('conversations.index');
     Route::get('/conversations/{conversation}', [ConversationController::class, 'show'])->name('conversations.show');
