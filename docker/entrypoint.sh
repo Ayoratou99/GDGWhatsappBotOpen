@@ -4,13 +4,27 @@ set -e
 cd /var/www/html
 
 # Sans cette attente, le worker démarre avant PostgreSQL et meurt en boucle.
+# L'erreur est conservée : une base joignable mais refusant l'authentification
+# ne doit pas se traduire par une attente silencieuse et sans fin.
+attempt=1
+max_attempts=30
+
 until php -r '
     new PDO(
         "pgsql:host=".getenv("DB_HOST").";port=".getenv("DB_PORT").";dbname=".getenv("DB_DATABASE"),
         getenv("DB_USERNAME"),
         getenv("DB_PASSWORD")
-    );' >/dev/null 2>&1; do
-    echo "En attente de PostgreSQL…"
+    );' 2>/tmp/pgsql-error; do
+
+    if [ "$attempt" -ge "$max_attempts" ]; then
+        echo "PostgreSQL injoignable après ${max_attempts} tentatives :"
+        cat /tmp/pgsql-error
+        echo "Hôte : ${DB_HOST}:${DB_PORT} — base : ${DB_DATABASE} — utilisateur : ${DB_USERNAME}"
+        exit 1
+    fi
+
+    echo "En attente de PostgreSQL… (${attempt}/${max_attempts})"
+    attempt=$((attempt + 1))
     sleep 1
 done
 
