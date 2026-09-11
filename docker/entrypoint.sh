@@ -31,9 +31,16 @@ done
 # Un seul service porte APP_BOOTSTRAP : les migrations ne doivent tourner
 # qu'une fois, même si trois conteneurs partagent cette image.
 if [ "${APP_BOOTSTRAP:-false}" = "true" ]; then
-    if ! grep -qE '^APP_KEY=base64:' .env 2>/dev/null; then
-        php artisan key:generate --force
-    fi
+    # Ne pas devancer un « key:generate » explicite : la clé serait produite
+    # deux fois, et la première jetée sans que personne ne comprenne pourquoi.
+    case "$*" in
+        *key:generate*) ;;
+        *)
+            if ! grep -qE '^APP_KEY=base64:' .env 2>/dev/null; then
+                php artisan key:generate --force
+            fi
+            ;;
+    esac
 
     php artisan migrate --force
 fi
