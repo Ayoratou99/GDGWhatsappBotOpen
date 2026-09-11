@@ -93,9 +93,44 @@ donne telles quelles.
 Les variables `VITE_*` sont compilées dans les assets : toute modification impose un
 `docker compose build` suivi d'un `docker compose up -d`.
 
-Si la console est servie en HTTPS, le navigateur refusera un websocket en clair. Proxifier
-`/app` vers `reverb:8080` en `wss`, puis fixer `VITE_REVERB_PORT=443` et
-`VITE_REVERB_SCHEME=https` **avant** la construction de l'image.
+Servie en HTTPS, la console refusera un websocket en clair : le temps réel doit passer par
+le même hôte, en `wss` sur 443. Côté `.env`, **avant** la construction de l'image :
+
+```dotenv
+APP_URL=https://votre-domaine
+VITE_REVERB_HOST=votre-domaine
+VITE_REVERB_PORT=443
+VITE_REVERB_SCHEME=https
+```
+
+Côté reverse proxy, deux routes — la seconde est celle qu'on oublie, et sans elle la page
+s'affiche parfaitement sans que rien n'arrive jamais :
+
+```nginx
+location / {
+    proxy_pass http://127.0.0.1:8000;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+}
+
+# Websocket Reverb. Ce préfixe couvre /app/{clé} et /apps/{id}/events.
+location /app {
+    proxy_pass http://127.0.0.1:8080;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_read_timeout 3600s;
+    proxy_send_timeout 3600s;
+}
+```
+
+Les ports 8000 et 8080 ne sont publiés que sur `127.0.0.1` : ajustez `APP_PORT` et
+`REVERB_FORWARD_PORT` s'ils sont déjà occupés sur la machine.
 
 Tant que l'app Meta est en mode *Développement*, seuls les numéros disposant d'un rôle sur
 l'app peuvent échanger avec elle. Passer l'app en mode *Live* pour ouvrir l'accès.

@@ -11,6 +11,19 @@ x-app: &app
       VITE_REVERB_SCHEME: ${VITE_REVERB_SCHEME:-http}
   image: gdg-whatsapp-console
   env_file: .env
+  # Adressage interne au réseau Docker. Ces valeurs sont une propriété de la
+  # pile, pas de la configuration : un port décalé dans .env pour éviter un
+  # conflit sur l'hôte ne doit pas couper la liaison entre les conteneurs.
+  environment: &app-env
+    DB_HOST: pgsql
+    DB_PORT: 5432
+    REDIS_HOST: redis
+    REDIS_PORT: 6379
+    REVERB_HOST: reverb
+    REVERB_PORT: 8080
+    REVERB_SCHEME: http
+    REVERB_SERVER_HOST: 0.0.0.0
+    REVERB_SERVER_PORT: 8080
   volumes:
     - .:/var/www/html
     # Ces deux volumes anonymes préservent ce que l'image a construit :
@@ -28,11 +41,14 @@ services:
   app:
     <<: *app
     environment:
+      <<: *app-env
       # Un seul service migre et génère la clé.
       APP_BOOTSTRAP: 'true'
     command: ['php', 'artisan', 'serve', '--host=0.0.0.0', '--port=8000']
     ports:
-      - '${APP_PORT:-8000}:8000'
+      # Lié à la boucle locale : l'application est faite pour être servie par un
+      # reverse proxy, pas exposée directement sur l'interface publique.
+      - '127.0.0.1:${APP_PORT:-8000}:8000'
 
   queue:
     <<: *app
@@ -42,7 +58,7 @@ services:
     <<: *app
     command: ['php', 'artisan', 'reverb:start', '--host=0.0.0.0', '--port=8080']
     ports:
-      - '${REVERB_FORWARD_PORT:-8080}:8080'
+      - '127.0.0.1:${REVERB_FORWARD_PORT:-8080}:8080'
 
   pgsql:
     image: postgres:17-alpine

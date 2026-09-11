@@ -19,6 +19,11 @@ return Application::configure(basePath: dirname(__DIR__))
         ['middleware' => ['web', 'admin']],
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // L'application n'est jamais exposée directement : derrière un proxy
+        // qui termine TLS, sans cette ligne, Laravel générerait des URL en
+        // http sur une page servie en https.
+        $middleware->trustProxies(at: '*');
+
         // Meta ne connaît pas notre jeton CSRF.
         $middleware->validateCsrfTokens(except: ['whatsapp/webhook']);
 
