@@ -65,6 +65,39 @@ class WhatsAppClient
     }
 
     /**
+     * Envoie un modèle approuvé. C'est le seul type de message que Meta
+     * accepte hors de la fenêtre de 24 h — donc le seul moyen d'ouvrir une
+     * conversation avec un contact qui n'a jamais écrit.
+     *
+     * @return array<string, mixed>
+     */
+    public function sendTemplate(string $to, string $template, string $language): array
+    {
+        $response = $this->post(config('whatsapp.phone_id').'/messages', [
+            'messaging_product' => 'whatsapp',
+            'recipient_type' => 'individual',
+            'to' => $to,
+            'type' => 'template',
+            'template' => [
+                'name' => $template,
+                'language' => ['code' => $language],
+            ],
+        ]);
+
+        if (! $response['ok']) {
+            Log::error('Invitation WhatsApp refusée par Meta.', [
+                'to' => $to,
+                'template' => $template,
+                'error' => $response['error'],
+            ]);
+
+            throw new RuntimeException($response['error']);
+        }
+
+        return $response['data'];
+    }
+
+    /**
      * Lecture simple sur la Graph API. Contrairement à sendText, cette méthode
      * ne lève pas : l'appelant vérifie l'état de la liaison, un échec est une
      * réponse comme une autre.

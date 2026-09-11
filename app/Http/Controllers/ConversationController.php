@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Conversation;
+use App\Models\Message;
 use App\Services\ConversationService;
 use App\Services\WhatsApp\ConnectionChecker;
 use Illuminate\Http\JsonResponse;
@@ -52,6 +53,28 @@ class ConversationController extends Controller
         return $request->expectsJson()
             ? response()->json(['message' => $message->toPayload()])
             : redirect()->route('conversations.show', $conversation);
+    }
+
+    /**
+     * Ouvre une conversation avec un numéro qui n'a jamais écrit.
+     */
+    public function invite(Request $request): RedirectResponse|JsonResponse
+    {
+        $validated = $request->validate([
+            'wa_id' => ['required', 'string', 'regex:/^[0-9]{8,15}$/'],
+        ]);
+
+        $message = $this->conversations->invite($validated['wa_id']);
+
+        if (! $request->expectsJson()) {
+            return redirect()->route('conversations.show', $message->conversation_id);
+        }
+
+        return response()->json([
+            'ok' => $message->status !== Message::STATUS_FAILED,
+            'message' => $message->error_message ?? 'Invitation envoyée.',
+            'conversation_id' => $message->conversation_id,
+        ]);
     }
 
     /**

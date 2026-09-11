@@ -97,6 +97,52 @@ class ConversationService
     }
 
     /**
+     * Ouvre une conversation avec un numéro qui n'a jamais écrit, par l'envoi
+     * d'un modèle approuvé. La fenêtre de 24 h reste fermée : seule une
+     * réponse du contact l'ouvrira, et c'est précisément ce qu'on attend.
+     */
+    public function invite(string $waId): Message
+    {
+        $contact = Contact::firstOrCreate(['wa_id' => $waId]);
+        $conversation = Conversation::firstOrCreate(['contact_id' => $contact->id]);
+
+        $message = $conversation->messages()->create([
+            'direction' => Message::DIRECTION_OUTBOUND,
+            'author' => Message::AUTHOR_OPERATOR,
+            'body' => sprintf('Invitation envoyée (modèle « %s »).', config('whatsapp.invitation.template')),
+            'status' => Message::STATUS_PENDING,
+        ]);
+
+        try {
+            $response = $this->client->sendTemplate(
+                $waId,
+                (string) config('whatsapp.invitation.template'),
+                (string) config('whatsapp.invitation.language'),
+            );
+
+            $message->forceFill([
+                'wam_id' => data_get($response, 'messages.0.id'),
+                'status' => Message::STATUS_SENT,
+                'sent_at' => Carbon::now(),
+            ])->save();
+        } catch (Throwable $exception) {
+            $message->forceFill([
+                'status' => Message::STATUS_FAILED,
+                'error_message' => $exception->getMessage(),
+            ])->save();
+        }
+
+        // last_inbound_at n'est pas touché : un modèle n'ouvre pas la fenêtre.
+        $conversation->forceFill(['last_message_at' => Carbon::now()])->save();
+
+        $message->setRelation('conversation', $conversation->setRelation('contact', $contact));
+
+        MessageSent::dispatch($message);
+
+        return $message;
+    }
+
+    /**
      * Applique un statut reçu par webhook. Retourne null si le message est
      * inconnu ou si le statut n'apporte rien de neuf.
      */

@@ -35,6 +35,23 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Invitation à discuter
+    |--------------------------------------------------------------------------
+    |
+    | Un numéro de test Meta n'apparaît dans aucun carnet d'adresses : la
+    | conversation ne peut s'ouvrir que depuis l'API, par un modèle approuvé.
+    | « hello_world » est fourni et pré-approuvé par Meta ; remplacez-le par le
+    | vôtre dès que vous en avez un.
+    |
+    */
+
+    'invitation' => [
+        'template' => env('WHATSAPP_INVITATION_TEMPLATE', 'hello_world'),
+        'language' => env('WHATSAPP_INVITATION_LANGUAGE', 'en_US'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Bot
     |--------------------------------------------------------------------------
     |

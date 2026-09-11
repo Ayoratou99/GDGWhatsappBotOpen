@@ -16,6 +16,7 @@ Route::middleware('admin')->group(function () {
     Route::post('/connection-status/repair', [ConversationController::class, 'repair'])->name('connection.repair');
 
     Route::get('/conversations', [ConversationController::class, 'index'])->name('conversations.index');
+    Route::post('/conversations/invite', [ConversationController::class, 'invite'])->name('conversations.invite');
     Route::get('/conversations/{conversation}', [ConversationController::class, 'show'])->name('conversations.show');
     Route::post('/conversations/{conversation}/messages', [ConversationController::class, 'store'])->name('conversations.messages.store');
 });
