@@ -1,0 +1,79 @@
+# app, queue et reverb partagent une seule image et un seul montage de code.
+x-app: &app
+  build:
+    context: .
+    args:
+      # Ce que le navigateur devra contacter : surchargez ces valeurs pour un
+      # tunnel ou un domaine, elles sont figées à la compilation des assets.
+      VITE_REVERB_APP_KEY: ${VITE_REVERB_APP_KEY:-local-key}
+      VITE_REVERB_HOST: ${VITE_REVERB_HOST:-localhost}
+      VITE_REVERB_PORT: ${VITE_REVERB_PORT:-8080}
+      VITE_REVERB_SCHEME: ${VITE_REVERB_SCHEME:-http}
+  image: gdg-whatsapp-console
+  env_file: .env
+  volumes:
+    - .:/var/www/html
+    # Ces deux volumes anonymes préservent ce que l'image a construit :
+    # sans eux, le montage du code masquerait vendor/ et public/build.
+    - /var/www/html/vendor
+    - /var/www/html/public/build
+  depends_on:
+    pgsql:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+  restart: unless-stopped
+
+services:
+  app:
+    <<: *app
+    environment:
+      # Un seul service migre et génère la clé.
+      APP_BOOTSTRAP: 'true'
+    command: ['php', 'artisan', 'serve', '--host=0.0.0.0', '--port=8000']
+    ports:
+      - '${APP_PORT:-8000}:8000'
+
+  queue:
+    <<: *app
+    command: ['php', 'artisan', 'queue:work', '--tries=3', '--timeout=60']
+
+  reverb:
+    <<: *app
+    command: ['php', 'artisan', 'reverb:start', '--host=0.0.0.0', '--port=8080']
+    ports:
+      - '${REVERB_FORWARD_PORT:-8080}:8080'
+
+  pgsql:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-whatsapp}
+      POSTGRES_USER: ${DB_USERNAME:-whatsapp}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-secret}
+    volumes:
+      - pgsql-data:/var/lib/postgresql/data
+    ports:
+      - '${DB_FORWARD_PORT:-5432}:5432'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USERNAME:-whatsapp} -d ${DB_DATABASE:-whatsapp}']
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis-data:/data
+    ports:
+      - '${REDIS_FORWARD_PORT:-6379}:6379'
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    restart: unless-stopped
+
+volumes:
+  pgsql-data:
+  redis-data:

@@ -1,0 +1,77 @@
+@import 'tailwindcss';
+
+/* Déclaré explicitement : l'étape Node de l'image Docker ne contient que
+   resources/, la détection automatique n'y verrait pas les vues. */
+@source '../views';
+@source '../js';
+
+/*
+| Palette Google, reprise des slides de la conférence. Les noms disent le rôle,
+| pas la couleur : « bot » restera le bon nom si le teal change.
+*/
+@theme {
+    --color-app: #f8f9fa;
+    --color-surface: #ffffff;
+    --color-ink: #202124;
+    --color-ink-muted: #5f6368;
+    --color-line: #e8eaed;
+
+    --color-operator: #4285f4;
+    --color-bot: #2dc4c0;
+    --color-read: #34a853;
+    --color-warn: #fbbc05;
+    --color-danger: #ea4335;
+
+    /* Déclinaisons fond / texte des mêmes rôles. Du #FBBC05 sur blanc est
+       illisible : les bandeaux utilisent un fond pâle et un texte soutenu. */
+    --color-operator-soft: #e8f0fe;
+    --color-operator-strong: #1967d2;
+    --color-warn-soft: #fef7e0;
+    --color-warn-strong: #b06000;
+    --color-danger-soft: #fce8e6;
+    --color-danger-strong: #c5221f;
+
+    --font-sans: 'Roboto', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+    /* Chasse fixe réservée aux identifiants techniques : numéro et wam_id se
+       comparent caractère par caractère pendant la démo. */
+    --font-mono: 'Roboto Mono', ui-monospace, 'Cascadia Mono', monospace;
+}
+
+@layer base {
+    html {
+        font-family: var(--font-sans);
+    }
+
+    /* Projeté en 1920×1080, le focus doit rester repérable depuis le fond de
+       la salle. */
+    :focus-visible {
+        outline: 2px solid var(--color-operator);
+        outline-offset: 2px;
+    }
+}
+
+/*
+| La seule animation de toute l'application : l'arrivée d'un message entrant.
+| Rien d'autre ne bouge, ni au survol, ni à l'apparition des sections.
+*/
+@keyframes message-in {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.message-in {
+    animation: message-in 180ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .message-in {
+        animation: none;
+    }
+}
