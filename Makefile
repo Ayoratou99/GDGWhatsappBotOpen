@@ -24,10 +24,10 @@ key: ## Génère APP_KEY dans .env
 migrate: ## Applique les migrations
 	$(COMPOSE) exec app php artisan migrate --force
 
-seed: ## Charge les données de démonstration
+seed: ## Charge les données d'exemple
 	$(COMPOSE) exec app php artisan db:seed --force
 
-fresh: ## Remet la base à zéro et recharge les données de démonstration
+fresh: ## Remet la base à zéro et recharge les données d'exemple
 	$(COMPOSE) exec app php artisan migrate:fresh --seed --force
 
 logs: ## Suit les logs des trois services applicatifs

@@ -86,7 +86,7 @@ class Message extends Model
     }
 
     /**
-     * Libellé lisible à cinq mètres : pas de coches grises minuscules.
+     * Libellé explicite plutôt que des coches minuscules, illisibles de loin.
      */
     public function statusLabel(): string
     {

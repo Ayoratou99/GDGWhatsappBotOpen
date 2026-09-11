@@ -5,8 +5,8 @@ window.Pusher = Pusher;
 
 /*
  * Ces variables sont figées dans le bundle au moment du « npm run build ».
- * Derrière un tunnel, elles doivent contenir l'hôte public : sinon la démo
- * fonctionne sur la machine du présentateur et nulle part ailleurs.
+ * Derrière un domaine ou un tunnel, elles doivent porter l'hôte public :
+ * sinon le temps réel ne fonctionne que depuis le serveur lui-même.
  */
 window.Echo = new Echo({
     broadcaster: 'reverb',

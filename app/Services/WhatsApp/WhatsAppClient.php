@@ -50,7 +50,8 @@ class WhatsAppClient
         }
 
         if ($response->failed()) {
-            // Le corps complet : c'est lui qui sauve une démo qui plante.
+            // Le corps complet : les erreurs Graph sont explicites, et c'est
+            // là que se lit la cause exacte d'un refus.
             Log::error('Envoi WhatsApp refusé par Meta.', [
                 'to' => $to,
                 'status' => $response->status(),

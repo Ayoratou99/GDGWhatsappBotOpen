@@ -21,7 +21,7 @@
                     <span class="font-mono text-xs text-ink-muted">+{{ $conversation->contact->wa_id }}</span>
                 </div>
 
-                {{-- Le bandeau de fenêtre : l'élément que la salle doit retenir. --}}
+                {{-- Bandeau de la fenêtre de 24 h, décompté côté client. --}}
                 <div class="flex shrink-0 items-center justify-between px-6 py-3" :class="bannerClass" role="status">
                     <span class="text-sm font-medium" x-text="bannerLabel"></span>
                     <span class="font-mono text-lg font-medium tabular-nums" x-text="countdown"></span>

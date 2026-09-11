@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Broadcast;
 
 /*
-| Ces canaux restent privés : sur une app publique pendant une conférence,
+| Ces canaux restent privés : sur une instance exposée publiquement,
 | n'importe qui pourrait sinon lire les conversations. L'autorisation réelle
 | est faite par le middleware « admin » déclaré dans bootstrap/app.php ;
 | arrivé ici, l'opérateur est déjà authentifié.

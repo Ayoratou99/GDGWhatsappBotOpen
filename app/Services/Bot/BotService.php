@@ -46,8 +46,8 @@ class BotService
     }
 
     /**
-     * Un modèle indisponible ne doit pas casser la démo : on log l'erreur et
-     * on retombe sur les mots-clés, qui répondent toujours.
+     * Un modèle indisponible ne doit pas interrompre le service : on log
+     * l'erreur et on retombe sur les mots-clés, qui répondent toujours.
      */
     private function askDriver(Message $inbound): ?string
     {

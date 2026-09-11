@@ -63,7 +63,7 @@ class DatabaseSeeder extends Seeder
             $inbound = $author === Message::AUTHOR_CONTACT;
 
             $conversation->messages()->create([
-                'wam_id' => 'wamid.demo.'.$waId.'.'.$minutesAgo,
+                'wam_id' => 'wamid.seed.'.$waId.'.'.$minutesAgo,
                 'direction' => $inbound ? Message::DIRECTION_INBOUND : Message::DIRECTION_OUTBOUND,
                 'author' => $author,
                 'body' => $body,

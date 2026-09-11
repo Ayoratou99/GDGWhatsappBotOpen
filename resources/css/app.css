@@ -6,8 +6,8 @@
 @source '../js';
 
 /*
-| Palette Google, reprise des slides de la conférence. Les noms disent le rôle,
-| pas la couleur : « bot » restera le bon nom si le teal change.
+| Palette Google. Les noms disent le rôle, pas la couleur : « bot » restera le
+| bon nom si le teal change.
 */
 @theme {
     --color-app: #f8f9fa;
@@ -33,7 +33,7 @@
 
     --font-sans: 'Roboto', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
     /* Chasse fixe réservée aux identifiants techniques : numéro et wam_id se
-       comparent caractère par caractère pendant la démo. */
+       comparent caractère par caractère. */
     --font-mono: 'Roboto Mono', ui-monospace, 'Cascadia Mono', monospace;
 }
 
@@ -42,8 +42,7 @@
         font-family: var(--font-sans);
     }
 
-    /* Projeté en 1920×1080, le focus doit rester repérable depuis le fond de
-       la salle. */
+    /* Le focus doit rester repérable, y compris sur un grand écran. */
     :focus-visible {
         outline: 2px solid var(--color-operator);
         outline-offset: 2px;

@@ -7,8 +7,8 @@ use App\Services\Bot\Contracts\BotDriver;
 use Illuminate\Support\Str;
 
 /**
- * Règles de correspondance déclarées dans config/whatsapp.php : on peut les
- * modifier entre deux démos sans toucher au code.
+ * Règles de correspondance déclarées dans config/whatsapp.php : elles se
+ * modifient sans toucher au code.
  */
 class KeywordBotDriver implements BotDriver
 {

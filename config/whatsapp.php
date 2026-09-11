@@ -55,7 +55,7 @@ return [
     |
     | La comparaison se fait sur le texte normalisé : minuscules, accents
     | retirés, espaces superflus supprimés. Deux lignes maximum par réponse,
-    | elles s'affichent sur un vidéoprojecteur.
+    | pour rester lisibles d'un coup d'œil.
     |
     */
 

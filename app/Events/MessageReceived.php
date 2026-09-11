@@ -17,7 +17,7 @@ class MessageReceived implements ShouldBroadcast
 
     /**
      * Le fil ouvert et la liste de gauche sont alimentés par deux canaux
-     * distincts : on ne recharge jamais la page pendant la démo.
+     * distincts : la page n'est jamais rechargée.
      */
     public function broadcastOn(): array
     {

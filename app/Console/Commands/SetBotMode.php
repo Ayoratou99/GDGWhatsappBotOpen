@@ -5,7 +5,7 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 
 /**
- * Bascule keyword ↔ ai en direct devant la salle, sans rebuild.
+ * Bascule keyword ↔ ai à chaud, sans reconstruire l'image.
  */
 class SetBotMode extends Command
 {

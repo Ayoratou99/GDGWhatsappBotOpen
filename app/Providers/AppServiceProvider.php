@@ -16,8 +16,8 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        // Montrer que l'outil a bien été appelé fait partie de la démo : sans
-        // cette trace, l'appel du modèle à LookupContact reste invisible.
+        // Sans cette trace, l'appel du modèle à LookupContact resterait
+        // invisible dans les logs.
         Event::listen(ToolInvoked::class, function (ToolInvoked $event) {
             Log::info('Outil IA invoqué.', [
                 'tool' => $event->tool,

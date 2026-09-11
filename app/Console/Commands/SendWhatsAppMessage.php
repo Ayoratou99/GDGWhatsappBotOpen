@@ -7,8 +7,8 @@ use Illuminate\Console\Command;
 use Throwable;
 
 /**
- * Vérifie l'envoi sortant sans passer par l'interface — utile avant la démo,
- * et pour isoler un problème de jeton ou de numéro.
+ * Vérifie l'envoi sortant sans passer par l'interface : utile pour isoler un
+ * problème de jeton, de numéro ou de configuration.
  */
 class SendWhatsAppMessage extends Command
 {

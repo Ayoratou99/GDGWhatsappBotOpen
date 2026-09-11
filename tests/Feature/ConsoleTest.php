@@ -17,7 +17,7 @@ class ConsoleTest extends TestCase
     {
         parent::setUp();
 
-        config()->set('admin.username', 'gdg');
+        config()->set('admin.username', 'operateur');
         config()->set('admin.password', 'mot-de-passe');
         config()->set('whatsapp.phone_id', '123456');
 
@@ -33,7 +33,7 @@ class ConsoleTest extends TestCase
 
     public function test_les_bons_identifiants_ouvrent_la_console(): void
     {
-        $this->post('/login', ['username' => 'gdg', 'password' => 'mot-de-passe'])
+        $this->post('/login', ['username' => 'operateur', 'password' => 'mot-de-passe'])
             ->assertRedirect('/conversations');
 
         $this->assertTrue(session('admin'));
@@ -41,7 +41,7 @@ class ConsoleTest extends TestCase
 
     public function test_les_mauvais_identifiants_sont_refuses(): void
     {
-        $this->post('/login', ['username' => 'gdg', 'password' => 'faux'])
+        $this->post('/login', ['username' => 'operateur', 'password' => 'faux'])
             ->assertSessionHasErrors('username');
 
         $this->assertNull(session('admin'));

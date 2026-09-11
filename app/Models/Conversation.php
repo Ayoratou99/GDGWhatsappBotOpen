@@ -55,7 +55,7 @@ class Conversation extends Model
 
     /**
      * Hors de cette fenêtre, Meta refuse tout message en texte libre : il
-     * faudrait passer par un template. C'est le point central de la démo.
+     * faudrait passer par un template.
      */
     public function isWindowOpen(): bool
     {

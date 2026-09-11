@@ -45,14 +45,16 @@ WORKDIR /var/www/html
 COPY . .
 COPY --from=assets /app/public/build ./public/build
 
+# Reverb et le SDK IA sont ajoutés ici plutôt que figés dans composer.lock : le
+# verrou du dépôt a été produit avant eux, et Reverb impose guzzlehttp/psr7 ^2.6
+# là où ce verrou fige la 3.x. Une mise à jour partielle ne peut pas rétrograder
+# un paquet verrouillé : on laisse donc composer résoudre l'arbre complet, avec
+# la connexion du serveur de build.
+#
 # --no-scripts : le manifeste des paquets est reconstruit au premier boot,
 # sans dépendre d'un .env au moment du build.
-#
-# Reverb et le SDK IA sont résolus ici plutôt que figés dans composer.lock :
-# le verrou du dépôt a été produit avant leur ajout, et c'est la connexion du
-# serveur de build qui télécharge, pas celle du poste de développement.
-RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts \
-    && composer require laravel/reverb laravel/ai \
+RUN rm -f composer.lock \
+    && composer require laravel/reverb laravel/ai --with-all-dependencies \
         --no-interaction --no-scripts --update-no-dev --optimize-autoloader \
     && mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache \
     && chmod -R 777 storage bootstrap/cache
