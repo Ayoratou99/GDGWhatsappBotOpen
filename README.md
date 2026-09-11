@@ -36,18 +36,37 @@ Renseigner dans `.env` :
 docker compose build
 ```
 
+Générer la clé applicative, une fois. Les trois conteneurs applicatifs démarrent en
+parallèle et lisent tous cette clé dans `.env` : elle doit y être avant, sinon le worker
+et Reverb peuvent démarrer sans elle.
+
+```bash
+docker compose run --rm app php artisan key:generate
+```
+
 ```bash
 docker compose up -d
 ```
 
-Les migrations et la clé applicative sont appliquées automatiquement au démarrage.
-Données d'exemple, facultatives :
+Les migrations sont appliquées automatiquement au démarrage. Données d'exemple,
+facultatives :
 
 ```bash
 docker compose exec app php artisan db:seed --force
 ```
 
-La console écoute sur le port 8000, Reverb sur le 8080.
+La console écoute sur le port 8000, Reverb sur le 8080, tous deux liés à `127.0.0.1`.
+
+**Si un de ces ports est déjà occupé sur la machine**, ne touchez pas à `DB_PORT` ni à
+`REDIS_PORT` — ils décrivent le réseau interne de Docker. Ce sont ces quatre variables qui
+commandent la publication vers l'hôte :
+
+```dotenv
+APP_PORT=8000
+REVERB_FORWARD_PORT=8080
+DB_FORWARD_PORT=5432
+REDIS_FORWARD_PORT=6379
+```
 
 ## Webhook Meta
 

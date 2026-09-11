@@ -69,7 +69,9 @@ services:
     volumes:
       - pgsql-data:/var/lib/postgresql/data
     ports:
-      - '${DB_FORWARD_PORT:-5432}:5432'
+      # Publié pour les outils d'administration uniquement : l'application
+      # joint la base par le réseau interne, jamais par ce port.
+      - '127.0.0.1:${DB_FORWARD_PORT:-5432}:5432'
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U ${DB_USERNAME:-whatsapp} -d ${DB_DATABASE:-whatsapp}']
       interval: 5s
@@ -82,7 +84,7 @@ services:
     volumes:
       - redis-data:/data
     ports:
-      - '${REDIS_FORWARD_PORT:-6379}:6379'
+      - '127.0.0.1:${REDIS_FORWARD_PORT:-6379}:6379'
     healthcheck:
       test: ['CMD', 'redis-cli', 'ping']
       interval: 5s
