@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Conversation;
 use App\Services\ConversationService;
+use App\Services\WhatsApp\ConnectionChecker;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -51,6 +52,15 @@ class ConversationController extends Controller
         return $request->expectsJson()
             ? response()->json(['message' => $message->toPayload()])
             : redirect()->route('conversations.show', $conversation);
+    }
+
+    /**
+     * État de la liaison Meta, appelé en asynchrone par l'en-tête : une API
+     * lente ne doit jamais retarder l'affichage des conversations.
+     */
+    public function status(Request $request, ConnectionChecker $checker): JsonResponse
+    {
+        return response()->json($checker->check($request->boolean('fresh')));
     }
 
     /**

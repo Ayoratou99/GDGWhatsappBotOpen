@@ -12,6 +12,8 @@ Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
 Route::middleware('admin')->group(function () {
     Route::redirect('/', '/conversations');
 
+    Route::get('/connection-status', [ConversationController::class, 'status'])->name('connection.status');
+
     Route::get('/conversations', [ConversationController::class, 'index'])->name('conversations.index');
     Route::get('/conversations/{conversation}', [ConversationController::class, 'show'])->name('conversations.show');
     Route::post('/conversations/{conversation}/messages', [ConversationController::class, 'store'])->name('conversations.messages.store');

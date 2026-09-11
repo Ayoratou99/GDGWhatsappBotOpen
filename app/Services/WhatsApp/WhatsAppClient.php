@@ -39,7 +39,7 @@ class WhatsAppClient
                 // throw: false — on veut lire le corps de l'erreur Meta,
                 // qui est explicite, plutôt que de recevoir une exception nue.
                 ->retry(2, 200, throw: false)
-                ->post($this->endpoint(), $payload);
+                ->post($this->url(config('whatsapp.phone_id').'/messages'), $payload);
         } catch (ConnectionException $exception) {
             Log::error('WhatsApp injoignable.', [
                 'to' => $to,
@@ -64,13 +64,38 @@ class WhatsAppClient
         return $response->json() ?? [];
     }
 
-    private function endpoint(): string
+    /**
+     * Lecture simple sur la Graph API. Contrairement à sendText, cette méthode
+     * ne lève pas : l'appelant vérifie l'état de la liaison, un échec est une
+     * réponse comme une autre.
+     *
+     * @param  array<string, mixed>  $query
+     * @return array{ok: bool, data?: array<string, mixed>, error?: string}
+     */
+    public function get(string $path, array $query = []): array
+    {
+        try {
+            $response = Http::withToken(config('whatsapp.token'))
+                ->timeout(10)
+                ->get($this->url($path), $query);
+        } catch (ConnectionException $exception) {
+            return ['ok' => false, 'error' => 'Graph API injoignable : '.$exception->getMessage()];
+        }
+
+        if ($response->failed()) {
+            return ['ok' => false, 'error' => $this->errorMessage($response->json(), $response->status())];
+        }
+
+        return ['ok' => true, 'data' => $response->json() ?? []];
+    }
+
+    private function url(string $path): string
     {
         return sprintf(
-            '%s/%s/%s/messages',
+            '%s/%s/%s',
             rtrim((string) config('whatsapp.graph_url'), '/'),
             config('whatsapp.api_version'),
-            config('whatsapp.phone_id'),
+            ltrim($path, '/'),
         );
     }
 

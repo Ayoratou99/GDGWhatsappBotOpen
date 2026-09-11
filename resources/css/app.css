@@ -42,6 +42,12 @@
         font-family: var(--font-sans);
     }
 
+    /* Alpine n'a pas encore pris la main : sans cette règle, les panneaux
+       masqués apparaîtraient une fraction de seconde au chargement. */
+    [x-cloak] {
+        display: none !important;
+    }
+
     /* Le focus doit rester repérable, y compris sur un grand écran. */
     :focus-visible {
         outline: 2px solid var(--color-operator);
