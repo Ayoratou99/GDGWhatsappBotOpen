@@ -16,9 +16,27 @@
                       @js($conversation->windowExpiresAt()?->toIso8601String())
                   )">
 
-                <div class="flex h-14 shrink-0 items-baseline gap-3 border-b border-line bg-surface px-6">
+                <div class="flex h-14 shrink-0 items-center gap-3 border-b border-line bg-surface px-6">
                     <h1 class="font-medium">{{ $conversation->displayName() }}</h1>
                     <span class="font-mono text-xs text-ink-muted">+{{ $conversation->contact->wa_id }}</span>
+
+                    <div class="ml-auto flex items-center gap-3 text-xs">
+                        <button type="button" x-show="! confirmClear" @click="confirmClear = true"
+                                class="text-ink-muted underline underline-offset-2">
+                            Vider la conversation
+                        </button>
+
+                        <template x-if="confirmClear">
+                            <span class="flex items-center gap-3">
+                                <span class="text-danger-strong">Supprimer tous les messages de ce fil ?</span>
+                                <button type="button" @click="clear()" :disabled="clearing"
+                                        class="rounded bg-danger px-3 py-1 font-medium text-white disabled:bg-line disabled:text-ink-muted"
+                                        x-text="clearing ? 'Suppression…' : 'Confirmer'"></button>
+                                <button type="button" @click="confirmClear = false"
+                                        class="text-ink-muted underline underline-offset-2">Annuler</button>
+                            </span>
+                        </template>
+                    </div>
                 </div>
 
                 {{-- Bandeau de la fenêtre de 24 h, décompté côté client. --}}
@@ -47,10 +65,13 @@
                                     <template x-if="message.direction === 'outbound'">
                                         <span><span aria-hidden="true"> · </span><span x-text="message.status_label"></span></span>
                                     </template>
-                                    <template x-if="message.error_message">
-                                        <span x-text="' — ' + message.error_message"></span>
-                                    </template>
                                 </p>
+
+                                {{-- La cause de l'échec mérite sa propre ligne : sur une seule,
+                                     elle noie l'heure et le statut. --}}
+                                <p x-show="message.error_message"
+                                   class="mt-1 max-w-xl rounded border border-danger bg-danger-soft px-3 py-2 text-xs leading-relaxed text-danger-strong"
+                                   x-text="message.error_message"></p>
                             </div>
                         </template>
 

@@ -12,6 +12,8 @@ export default (conversationId, initialMessages = [], windowExpiresAt = null) =>
     draft: '',
     sending: false,
     error: null,
+    confirmClear: false,
+    clearing: false,
 
     init() {
         this.tick();
@@ -137,6 +139,42 @@ export default (conversationId, initialMessages = [], windowExpiresAt = null) =>
             this.error = "L'envoi a échoué : la console n'a pas pu joindre le serveur.";
         } finally {
             this.sending = false;
+        }
+    },
+
+    /**
+     * Vide le fil affiché. Le contact et la fenêtre de 24 h sont conservés :
+     * on efface l'historique, pas la relation.
+     */
+    async clear() {
+        if (this.clearing) {
+            return;
+        }
+
+        this.clearing = true;
+        this.error = null;
+
+        try {
+            const response = await fetch(`/conversations/${this.conversationId}/messages`, {
+                method: 'DELETE',
+                headers: {
+                    Accept: 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                },
+            });
+
+            if (! response.ok) {
+                this.error = "La conversation n'a pas pu être vidée.";
+
+                return;
+            }
+
+            this.messages = [];
+            this.confirmClear = false;
+        } catch (exception) {
+            this.error = "La console n'a pas pu joindre le serveur.";
+        } finally {
+            this.clearing = false;
         }
     },
 

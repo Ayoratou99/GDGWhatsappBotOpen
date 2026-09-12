@@ -157,19 +157,33 @@ class WhatsAppClient
     }
 
     /**
-     * Message d'erreur court et lisible, affiché tel quel sous la bulle en
-     * échec dans l'interface.
+     * Les erreurs de Meta répètent la même phrase dans « message » et dans
+     * « error_data.details ». On garde le code, et une formulation courte —
+     * c'est affiché sous la bulle, pas dans un terminal.
      *
      * @param  array<string, mixed>|null  $body
      */
     private function errorMessage(?array $body, int $status): string
     {
         $error = data_get($body, 'error', []);
+        $code = (int) data_get($error, 'code', 0);
 
-        return trim(implode(' — ', array_filter([
-            'Erreur Meta '.$status,
-            data_get($error, 'message'),
-            data_get($error, 'error_data.details'),
-        ])));
+        $known = [
+            131030 => 'Destinataire absent de la liste des numéros autorisés. En mode Développement, ajoutez-le dans WhatsApp → API Setup → champ « To ».',
+            131026 => "Ce numéro ne peut pas recevoir de message : compte WhatsApp inexistant ou inaccessible.",
+            131047 => 'Fenêtre de 24 heures fermée : seul un message modèle peut relancer la conversation.',
+            133010 => "Numéro émetteur non enregistré auprès de la Cloud API.",
+            131042 => 'Moyen de paiement manquant ou invalide sur le compte Meta.',
+            190 => "Jeton d'accès invalide ou expiré.",
+        ];
+
+        if (isset($known[$code])) {
+            return $code.' — '.$known[$code];
+        }
+
+        // Le préfixe « (#code) » de Meta est retiré : le code est déjà en tête.
+        $message = trim((string) preg_replace('/^\(#\d+\)\s*/', '', (string) data_get($error, 'message', '')));
+
+        return ($code ?: $status).' — '.($message !== '' ? $message : 'Erreur inconnue.');
     }
 }

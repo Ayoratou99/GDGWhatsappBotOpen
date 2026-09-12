@@ -19,6 +19,7 @@ Route::middleware('admin')->group(function () {
     Route::post('/conversations/invite', [ConversationController::class, 'invite'])->name('conversations.invite');
     Route::get('/conversations/{conversation}', [ConversationController::class, 'show'])->name('conversations.show');
     Route::post('/conversations/{conversation}/messages', [ConversationController::class, 'store'])->name('conversations.messages.store');
+    Route::delete('/conversations/{conversation}/messages', [ConversationController::class, 'clear'])->name('conversations.messages.clear');
 });
 
 // Webhook Meta. Le GET n'est pas signé : il ne doit pas traverser le

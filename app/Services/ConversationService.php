@@ -183,6 +183,18 @@ class ConversationService
     }
 
     /**
+     * Vide un fil de ses messages. La conversation et le contact subsistent,
+     * et last_inbound_at n'est pas touché : la fenêtre de 24 h appartient au
+     * contact, pas à notre affichage.
+     */
+    public function clear(Conversation $conversation): void
+    {
+        $conversation->messages()->delete();
+
+        $conversation->forceFill(['unread_count' => 0])->save();
+    }
+
+    /**
      * L'opérateur a ouvert le fil : le compteur de non-lus retombe à zéro.
      */
     public function markAsRead(Conversation $conversation): void

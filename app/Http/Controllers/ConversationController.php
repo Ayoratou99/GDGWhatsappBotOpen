@@ -56,6 +56,18 @@ class ConversationController extends Controller
     }
 
     /**
+     * Vide un fil de ses messages, sans supprimer la conversation.
+     */
+    public function clear(Request $request, Conversation $conversation): JsonResponse|RedirectResponse
+    {
+        $this->conversations->clear($conversation);
+
+        return $request->expectsJson()
+            ? response()->json(['ok' => true])
+            : redirect()->route('conversations.show', $conversation);
+    }
+
+    /**
      * Ouvre une conversation avec un numéro qui n'a jamais écrit.
      */
     public function invite(Request $request): RedirectResponse|JsonResponse
