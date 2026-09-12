@@ -33,7 +33,10 @@ FROM php:8.4-cli AS app
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         $PHPIZE_DEPS git unzip libpq-dev libzip-dev libicu-dev \
-    && docker-php-ext-install -j"$(nproc)" pdo_pgsql zip intl bcmath \
+    # pcntl : Reverb s'en sert pour les signaux d'arrêt (SIGINT, SIGTERM) et
+    # refuse de démarrer sans elle ; le worker de file l'utilise aussi pour
+    # s'arrêter proprement et faire respecter --timeout.
+    && docker-php-ext-install -j"$(nproc)" pdo_pgsql zip intl bcmath pcntl \
     && pecl install redis \
     && docker-php-ext-enable redis \
     && rm -rf /var/lib/apt/lists/*

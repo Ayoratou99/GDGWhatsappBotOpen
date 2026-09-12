@@ -68,6 +68,20 @@ DB_FORWARD_PORT=5432
 REDIS_FORWARD_PORT=6379
 ```
 
+## Mettre à jour
+
+Après avoir récupéré une nouvelle version du code :
+
+```bash
+docker compose up -d --build --renew-anon-volumes
+```
+
+`--renew-anon-volumes` n'est pas facultatif. `vendor/` et `public/build` vivent dans des
+volumes anonymes qui préservent ce que l'image a construit — sans quoi le montage du code
+les masquerait. Compose conserve ces volumes d'une recréation à l'autre : sans cette
+option, une image fraîchement reconstruite continue de servir les assets de la
+précédente, et l'interface s'affiche sans style.
+
 ## Webhook Meta
 
 Dans WhatsApp → Configuration → Webhook :
