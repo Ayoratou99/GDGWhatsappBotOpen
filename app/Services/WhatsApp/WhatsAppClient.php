@@ -28,7 +28,9 @@ class WhatsAppClient
             'to' => $to,
             'type' => 'text',
             'text' => [
-                'preview_url' => false,
+                // Les réponses portent des liens d'inscription : l'aperçu
+                // affiche le titre et l'image de la page sous le message.
+                'preview_url' => true,
                 'body' => $body,
             ],
         ];
