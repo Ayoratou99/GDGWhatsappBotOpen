@@ -14,6 +14,8 @@ export default (conversationId, initialMessages = [], windowExpiresAt = null) =>
     error: null,
     confirmClear: false,
     clearing: false,
+    typing: false,
+    typingTimer: null,
 
     init() {
         this.tick();
@@ -29,8 +31,23 @@ export default (conversationId, initialMessages = [], windowExpiresAt = null) =>
                 this.tick();
                 this.push(event.message);
             })
-            .listen('.message.sent', (event) => this.push(event.message))
+            .listen('.bot.typing', () => this.showTyping())
+            .listen('.message.sent', (event) => {
+                this.typing = false;
+                this.push(event.message);
+            })
             .listen('.message.status', (event) => this.applyStatus(event));
+    },
+
+    /**
+     * Couvre le temps de réflexion du bot. Le filet de sécurité évite qu'un
+     * driver qui n'aboutit pas ne laisse l'indicateur affiché pour toujours.
+     */
+    showTyping() {
+        this.typing = true;
+        clearTimeout(this.typingTimer);
+        this.typingTimer = setTimeout(() => { this.typing = false; }, 20000);
+        this.$nextTick(() => this.scrollToBottom());
     },
 
     tick() {

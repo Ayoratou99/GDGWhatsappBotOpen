@@ -168,4 +168,10 @@ Les ports 8000 et 8080 ne sont publiés que sur `127.0.0.1` : ajustez `APP_PORT`
 Tant que l'app Meta est en mode *Développement*, seuls les numéros disposant d'un rôle sur
 l'app peuvent échanger avec elle. Passer l'app en mode *Live* pour ouvrir l'accès.
 
+Les numéros gabonais sont convertis avant l'envoi : WhatsApp conserve l'identifiant
+historique en `0` (`24102943687`) alors que Meta attend le format actuel avec chiffre
+opérateur (`24162943687`). La règle est déclarée dans `config/whatsapp.php`, sous
+`number_normalization`, et chaque conversion est tracée dans les logs. Videz la clé
+`country` pour la désactiver hors du Gabon.
+
 `.env` n'est pas versionné ; `.env.example` ne contient que des clés vides.

@@ -3,13 +3,18 @@
 namespace App\Events;
 
 use App\Models\Message;
-use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Broadcasting\PrivateChannel;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class MessageReceived implements ShouldBroadcast
+/**
+ * Diffusion synchrone, et non mise en file : le message entrant doit
+ * apparaître avant que le bot n'appelle Meta, pas après. Un envoi sortant qui
+ * traîne ne doit jamais retarder l'affichage de ce qui vient d'arriver.
+ */
+class MessageReceived implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 

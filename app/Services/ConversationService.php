@@ -81,7 +81,7 @@ class ConversationService
             return null;
         }
 
-        MessageReceived::dispatch($message);
+        $this->announce(new MessageReceived($message));
 
         return $message;
     }
@@ -115,7 +115,7 @@ class ConversationService
 
         try {
             $response = $this->client->sendTemplate(
-                $waId,
+                $this->recipient($waId),
                 (string) config('whatsapp.invitation.template'),
                 (string) config('whatsapp.invitation.language'),
             );
@@ -137,7 +137,7 @@ class ConversationService
 
         $message->setRelation('conversation', $conversation->setRelation('contact', $contact));
 
-        MessageSent::dispatch($message);
+        $this->announce(new MessageSent($message));
 
         return $message;
     }
@@ -177,7 +177,7 @@ class ConversationService
             'sent_at' => $message->sent_at ?? $occurredAt,
         ], fn ($value) => $value !== null))->save();
 
-        MessageStatusUpdated::dispatch($message);
+        $this->announce(new MessageStatusUpdated($message));
 
         return $message;
     }
@@ -205,6 +205,68 @@ class ConversationService
     }
 
     /**
+     * Diffuse un événement sans jamais laisser son échec remonter. La
+     * diffusion est synchrone pour être immédiate ; un serveur temps réel
+     * arrêté ne doit pas pour autant empêcher l'enregistrement d'un message
+     * ni la réponse du bot.
+     */
+    private function announce(object $event): void
+    {
+        try {
+            event($event);
+        } catch (Throwable $exception) {
+            Log::warning('Diffusion temps réel impossible.', [
+                'event' => $event::class,
+                'message' => $exception->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Numéro réellement composé. Une exception nominative l'emporte sur la
+     * règle de conversion ; sans exception, c'est cette dernière qui décide.
+     */
+    private function recipient(string $waId): string
+    {
+        $alias = config('whatsapp.recipient_aliases')[$waId] ?? null;
+
+        return $alias !== null ? (string) $alias : $this->normalize($waId);
+    }
+
+    /**
+     * Convertit un wa_id historique vers le format que Meta attend à l'envoi.
+     * Le chiffre suivant le 0 désigne l'opérateur et commande le préfixe :
+     * 241 0[2] 94 36 87 devient 241 [6]2 94 36 87.
+     */
+    private function normalize(string $waId): string
+    {
+        $country = (string) config('whatsapp.number_normalization.country', '');
+
+        if ($country === '' || ! str_starts_with($waId, $country.'0')) {
+            return $waId;
+        }
+
+        // Tout ce qui suit le 0 national.
+        $national = substr($waId, strlen($country) + 1);
+        $operator = config('whatsapp.number_normalization.operators')[$national[0] ?? ''] ?? null;
+
+        if ($operator === null) {
+            return $waId;
+        }
+
+        $recipient = $country.$operator.$national;
+
+        // La conversion ne doit jamais être invisible : elle explique à elle
+        // seule un numéro qui part différemment de celui affiché.
+        Log::info('Numéro converti au format actuel avant envoi.', [
+            'wa_id' => $waId,
+            'recipient' => $recipient,
+        ]);
+
+        return $recipient;
+    }
+
+    /**
      * Crée la ligne « pending », appelle Meta, puis retombe sur « sent » ou
      * « failed ». Le message existe en base même quand l'envoi échoue :
      * l'échec doit être visible à l'écran, pas seulement dans les logs.
@@ -225,7 +287,7 @@ class ConversationService
         ]);
 
         try {
-            $response = $this->client->sendText($conversation->contact->wa_id, $body);
+            $response = $this->client->sendText($this->recipient($conversation->contact->wa_id), $body);
 
             $message->forceFill([
                 'wam_id' => data_get($response, 'messages.0.id'),
@@ -243,7 +305,7 @@ class ConversationService
 
         $message->setRelation('conversation', $conversation);
 
-        MessageSent::dispatch($message);
+        $this->announce(new MessageSent($message));
 
         return $message;
     }

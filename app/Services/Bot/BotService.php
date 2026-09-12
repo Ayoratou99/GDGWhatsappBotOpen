@@ -2,6 +2,7 @@
 
 namespace App\Services\Bot;
 
+use App\Events\BotIsTyping;
 use App\Models\Message;
 use App\Services\Bot\Contracts\BotDriver;
 use App\Services\Bot\Drivers\AiBotDriver;
@@ -34,6 +35,15 @@ class BotService
             ]);
 
             return;
+        }
+
+        // L'indicateur de saisie est un confort : son échec ne doit rien coûter.
+        try {
+            BotIsTyping::dispatch($conversation->id);
+        } catch (Throwable $exception) {
+            Log::warning("Diffusion de l'indicateur de saisie impossible.", [
+                'message' => $exception->getMessage(),
+            ]);
         }
 
         $reply = $this->askDriver($inbound);

@@ -45,6 +45,46 @@ return [
     |
     */
 
+    /*
+    |--------------------------------------------------------------------------
+    | Format des numéros à l'envoi
+    |--------------------------------------------------------------------------
+    |
+    | Le Gabon a ajouté un chiffre opérateur à son plan de numérotation, mais
+    | WhatsApp conserve l'identifiant historique commençant par 0 : le webhook
+    | annonce 241 02 94 36 87 là où le numéro actuel est 241 62 94 36 87. Meta
+    | accepte le format actuel à l'envoi et le ramène lui-même vers le wa_id
+    | historique — la preuve est dans sa réponse, qui renvoie « input » et
+    | « wa_id » côte à côte.
+    |
+    | La conversion porte sur le chiffre qui suit le 0 : il désigne l'opérateur
+    | et commande le préfixe à insérer. Videz « country » pour désactiver
+    | entièrement ce mécanisme.
+    |
+    */
+
+    'number_normalization' => [
+        'country' => '241',
+        'operators' => [
+            // Moov Africa / Gabon Télécom
+            '2' => '6',
+            '5' => '6',
+            '6' => '6',
+            // Airtel
+            '4' => '7',
+            '7' => '7',
+        ],
+    ],
+
+    /*
+    | Exceptions nominatives, prioritaires sur la conversion ci-dessus. À
+    | n'utiliser que pour un numéro qui échapperait à la règle.
+    */
+
+    'recipient_aliases' => [
+        // '24102943687' => '24162943687',
+    ],
+
     'invitation' => [
         'template' => env('WHATSAPP_INVITATION_TEMPLATE', 'hello_world'),
         'language' => env('WHATSAPP_INVITATION_LANGUAGE', 'en_US'),

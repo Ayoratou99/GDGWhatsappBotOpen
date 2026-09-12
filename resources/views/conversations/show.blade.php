@@ -75,7 +75,19 @@
                             </div>
                         </template>
 
-                        <p x-show="messages.length === 0" class="text-sm text-ink-muted">
+                        {{-- Le bot rédige : l'attente devient visible au lieu de passer
+                             pour une interface figée. --}}
+                        <div x-show="typing" x-cloak class="flex flex-col items-end">
+                            <span class="mb-1 text-xs font-medium text-bot">Bot</span>
+                            <div class="flex items-center gap-1.5 rounded-lg border border-bot border-r-4 bg-surface px-4 py-3.5">
+                                <span class="typing-dot inline-block h-2 w-2 rounded-full bg-bot"></span>
+                                <span class="typing-dot inline-block h-2 w-2 rounded-full bg-bot"></span>
+                                <span class="typing-dot inline-block h-2 w-2 rounded-full bg-bot"></span>
+                                <span class="sr-only">Le bot rédige une réponse</span>
+                            </div>
+                        </div>
+
+                        <p x-show="messages.length === 0 && ! typing" class="text-sm text-ink-muted">
                             Aucun message dans cette conversation.
                         </p>
                     </div>
