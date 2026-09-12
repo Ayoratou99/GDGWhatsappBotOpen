@@ -24,10 +24,10 @@ class DatabaseSeeder extends Seeder
             lastInboundAt: Carbon::now()->subMinutes(4),
             unread: 0,
             messages: [
-                ['contact', 'Bonjour, vous êtes ouverts samedi ?', 6],
-                ['bot', "Bonjour et bienvenue chez Ntchina Café ! Je suis l'assistant WhatsApp de la maison.\nÉcrivez « menu » pour voir ce que je sais faire.", 6],
-                ['contact', 'horaires', 4],
-                ['bot', "Nous sommes ouverts du lundi au samedi, de 8h à 19h.\nFermé le dimanche et les jours fériés.", 4],
+                ['contact', 'Bonjour !', 6],
+                ['bot', "Salut ! Je suis Festi, la bouteille légendaire du DevFest Libreville. 🍾\nJe suis là pour t'informer sur le plus grand rendez-vous tech de l'année !\nÉcris « menu » ou « inscription » pour démarrer.", 6],
+                ['contact', 'la date et le lieu ?', 4],
+                ['bot', "📅 Date : Samedi 19 décembre 2026, de 09h00 à 17h00 (GMT+1).\n📍 Lieu : Tour ANINF, Libreville.", 4],
             ],
         );
 
@@ -37,8 +37,8 @@ class DatabaseSeeder extends Seeder
             lastInboundAt: Carbon::now()->subHours(23),
             unread: 1,
             messages: [
-                ['contact', 'Est-ce que je peux réserver une table pour huit personnes ?', 23 * 60],
-                ['operator', 'Bien sûr, je vous réserve la grande table pour 19h.', 23 * 60 - 2],
+                ['contact', 'Est-ce qu’il reste des places pour huit étudiants ?', 23 * 60],
+                ['operator', 'Oui, il en reste : inscrivez chacun d’eux sur la page de l’événement et je vous confirme le groupe.', 23 * 60 - 2],
             ],
         );
     }

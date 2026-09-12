@@ -10,9 +10,15 @@ class KeywordBotTest extends TestCase
 {
     public function test_la_casse_et_les_accents_ne_changent_rien(): void
     {
-        $this->assertStringContainsString('bienvenue', $this->reply('BONJOUR !'));
-        $this->assertStringContainsString('8h à 19h', $this->reply('Vos horaires ?'));
-        $this->assertStringContainsString('8h à 19h', $this->reply('quelle est votre HEURE d’ouverture'));
+        $this->assertStringContainsString('Festi', $this->reply('BONJOUR !'));
+        $this->assertStringContainsString('19 décembre 2026', $this->reply('Vos horaires ?'));
+        $this->assertStringContainsString('19 décembre 2026', $this->reply('c’est QUAND déjà ?'));
+    }
+
+    public function test_la_premiere_regle_qui_correspond_l_emporte(): void
+    {
+        // « menu » précède la règle des dates, qui contient aussi « ou ».
+        $this->assertStringContainsString('Voici ce que je peux faire', $this->reply('menu ou inscription'));
     }
 
     public function test_les_mots_cles_respectent_les_frontieres_de_mots(): void

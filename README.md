@@ -70,6 +70,13 @@ REDIS_FORWARD_PORT=6379
 
 ## Mettre à jour
 
+Après une modification de `.env` — jeton, numéro, mode du bot — un redémarrage suffit :
+le fichier est lu par l'application elle-même, depuis le code monté.
+
+```bash
+docker compose restart app queue reverb
+```
+
 Après avoir récupéré une nouvelle version du code :
 
 ```bash

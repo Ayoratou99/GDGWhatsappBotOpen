@@ -111,30 +111,47 @@ return [
     |--------------------------------------------------------------------------
     |
     | La comparaison se fait sur le texte normalisé : minuscules, accents
-    | retirés, espaces superflus supprimés. Deux lignes maximum par réponse,
-    | pour rester lisibles d'un coup d'œil.
+    | retirés, espaces superflus supprimés, et frontières de mots respectées —
+    | « salut » ne se déclenche pas à l'intérieur de « salutation ». La
+    | première règle qui correspond l'emporte : l'ordre compte.
     |
     */
 
     'keywords' => [
         [
-            'match' => ['bonjour', 'salut', 'hello', 'bonsoir', 'bjr'],
-            'reply' => "Bonjour et bienvenue chez Ntchina Café ! Je suis l'assistant WhatsApp de la maison.\nÉcrivez « menu » pour voir ce que je sais faire.",
+            'match' => ['bonjour', 'salut', 'hello', 'bonsoir', 'bjr', 'festi', 'qui es-tu', 'presentation'],
+            'reply' => "Salut ! Je suis Festi, la bouteille légendaire du DevFest Libreville. 🍾\nJe suis là pour t'informer sur le plus grand rendez-vous tech de l'année !\nÉcris « menu » ou « inscription » pour démarrer.",
         ],
         [
-            'match' => ['menu', 'aide', 'help', 'options'],
-            'reply' => "Je peux vous renseigner sur : « horaires », « contact », « adresse ».\nUn conseiller peut aussi reprendre la conversation à tout moment.",
+            'match' => ['menu', 'aide', 'help', 'options', 'infos'],
+            'reply' => "Voici ce que je peux faire pour toi :\n- « inscription » : Réserver ta place\n- « date » ou « lieu » : Infos pratiques\n- « programme » ou « theme » : Découvrir les pistes\n- « contact » ou « reseaux » : Joindre le GDG Libreville",
         ],
         [
-            'match' => ['horaire', 'horaires', 'heure', 'heures', 'ouvert', 'ouverture'],
-            'reply' => "Nous sommes ouverts du lundi au samedi, de 8h à 19h.\nFermé le dimanche et les jours fériés.",
+            'match' => ['inscrire', 'inscription', 'pass', 'ticket', 'billet', 'place', 'reserver', 'participer', 'lien'],
+            'reply' => "🎟️ Les places sont limitées ! Le DevFest réunit développeurs, étudiants et créateurs le 19 Décembre 2026.\n👉 Réserve vite ta place ici : https://gdg.community.dev/events/details/google-gdg-libreville-presents-devfest-libreville-2026-creer-securiser-faire-evoluer-les-developpeurs-et-les-createurs-a-lere-agentique/",
         ],
         [
-            'match' => ['contact', 'adresse', 'ou etes vous', 'telephone', 'appeler'],
-            'reply' => "Ntchina Café — Boulevard Triomphal, Libreville.\nTéléphone : +241 77 00 00 00.",
+            'match' => ['quand', 'date', 'heure', 'horaires', 'lieu', 'adresse', 'emplacement', 'ou', 'tour aninf'],
+            'reply' => "📅 Date : Samedi 19 décembre 2026, de 09h00 à 17h00 (GMT+1).\n📍 Lieu : Tour ANINF, Libreville.\n🎟️ N'attends pas, inscris-toi ici : https://gdg.community.dev/events/details/google-gdg-libreville-presents-devfest-libreville-2026-creer-securiser-faire-evoluer-les-developpeurs-et-les-createurs-a-lere-agentique/",
+        ],
+        [
+            'match' => ['theme', 'sujet', 'programme', 'piste', 'track', 'developers', 'builders', 'ia', 'agentique', 'gemini'],
+            'reply' => "💡 Thème : « Créer, sécuriser, faire évoluer à l'ère agentique ».\n2 pistes au choix :\n• Developers : IA générative, Gemini, sécurité, cloud...\n• Builders : Créer sans coder pour chefs de projet & designers.\n🎟️ Choisis ton parcours et inscris-toi : https://gdg.community.dev/events/details/google-gdg-libreville-presents-devfest-libreville-2026-creer-securiser-faire-evoluer-les-developpeurs-et-les-createurs-a-lere-agentique/",
+        ],
+        [
+            'match' => ['pour qui', 'profil', 'etudiant', 'debutant', 'entrepreneur', 'designer'],
+            'reply' => "🤝 Le DevFest est fait pour toi si tu es développeur, étudiant, entrepreneur, chef de produit, designer ou passionné d'IA !\n🎟️ Prends ta place maintenant : https://gdg.community.dev/events/details/google-gdg-libreville-presents-devfest-libreville-2026-creer-securiser-faire-evoluer-les-developpeurs-et-les-createurs-a-lere-agentique/",
+        ],
+        [
+            'match' => ['contact', 'email', 'telephone', 'phone', 'joindre', 'organisateur', 'whatsapp'],
+            'reply' => "📧 Email : gdglibreville@gmail.com\n📞 Tél/WhatsApp : +241 66127676 / +241 74213803\n🌐 Communauté : https://gdg.community.dev/gdg-libreville/",
+        ],
+        [
+            'match' => ['reseaux', 'facebook', 'twitter', 'x', 'linkedin', 'youtube', 'social'],
+            'reply' => "Suis le GDG Libreville sur nos réseaux :\n• Facebook : https://www.facebook.com/gdglibreville/\n• Twitter : https://twitter.com/GDGLibreville\n• LinkedIn : https://www.linkedin.com/company/google-developers-group-libreville\n• YouTube : https://youtube.com/@gdglibreville8339",
         ],
     ],
 
-    'fallback' => "Je n'ai pas encore appris à répondre à cela.\nÉcrivez « menu » pour voir les options disponibles.",
+    'fallback' => "Je n'ai pas encore appris à répondre à cela.\nÉcris « menu » pour voir tout ce que je sais faire !",
 
 ];
